@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Controle Financeiro Pro</title>
+    <style>
+        /* Sistema de Cores Inteligente */
+        :root {
+            --bg: #f0f2f5;
+            --container: #ffffff;
+            --texto: #333333;
+            --cinza: #7f8c8d;
+            --secao: #f9f9f9;
+            --borda: #eeeeee;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --container: #1e1e1e;
+            --texto: #e0e0e0;
+            --cinza: #a0a0a0;
+            --secao: #2d2d2d;
+            --borda: #3d3d3d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--texto);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background-color: var(--container);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+
+        /* Topo e Botão Escuro */
+        .topo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        h1 { margin: 0; font-size: 22px; }
+        
+        .btn-tema {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Cards do Painel */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .card {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+        }
+
+        .card.renda { background-color: #2ecc71; }
+        .card.gasto { background-color: #e74c3c; }
+        .card.saldo { grid-column: span 2; background-color: #34495e; }
+        .card h3 { margin: 0; font-size: 13px; opacity: 0.9; }
+        .card p { margin: 5px 0 0 0; font-size: 18px; font-weight: bold; }
+
+        /* Caixas de Entrada e Seções */
+        .secao {
+            background-color: var(--secao);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid var(--borda);
+            box-sizing: border-box;
+        }
+
+        .secao h3 { margin: 0 0 10px 0; font-size: 15px; }
+
+        .linha-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        @media (min-width: 380px) {
+            .linha-inputs { flex-direction: row; }
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: var(--container);
+            color: var(--texto);
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-azul { background-color: #3498db; color: white; width: 100%; }
+        .btn-azul:hover { background-color: #2980b9; }
+        .btn-salvar { background-color: #e67e22; color: white; width: 100%; margin-top: 5px; }
+        .btn-salvar:hover { background-color: #d35400; }
+        .btn-limpar { background-color: #95a5a6; color: white; width: 100%; margin-top: 15px; font-size: 12px; }
+
+        /* Listagem de Itens */
+        ul { list-style: none; padding: 0; margin: 0; max-height: 180px; overflow-y: auto; }
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--borda);
+        }
+
+        .info-gasto { display: flex; flex-direction: column; }
+        .cat-gasto { font-size: 11px; color: var(--cinza); margin-top: 2px; }
+        
+        /* Cores de indicativo no histórico */
+        .txt-entrada { color: #2ecc71; font-weight: bold; }
+        .txt-saida { color: #e74c3c; font-weight: bold; }
+
+        .remover { background: none; color: #e74c3c; font-size: 16px; padding: 0 5px; }
+
+        /* Estilo do Histórico Permanente */
+        details {
+            background-color: var(--container);
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid var(--borda);
+        }
+        summary { font-weight: bold; cursor: pointer; outline: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="topo">
+            <h1>Finanças Pessoais</h1>
+            <button class="btn-tema" onclick="alternarTema()" id="iconeTema">🌙</button>
+        </div>
+
+        <div class="dashboard">
+            <div class="card renda">
+                <h3>Total Recebido (Renda)</h3>
+                <p id="txtRenda">R$ 0,00</p>
+            </div>
+            <div class="card gasto">
+                <h3>Total Gasto</h3>
+                <p id="txtGasto">R$ 0,00</p>
+            </div>
+            <div class="card saldo" id="cardSaldo">
+                <h3>Saldo Restante</h3>
+                <p id="txtSaldo">R$ 0,00</p>
+            </div>
+        </div>
+
+        <div class="secao">
+            <h3>1. Salário Base do Mês</h3>
+            <div style="display: flex; gap: 8px;">
+                <input type="number" id="valRenda" placeholder="Ex: 3000" step="0.01">
+                <button class="btn-azul" style="width: auto;" onclick="definirRenda()">Definir</button>
+            </div>
+        </div>
+
+        <div class="secao">
+            <h3>2. Adicionar Movimentação (Renda Extra ou Gastos)</h3>
+            <div class="linha-inputs">
+                <input type="text" id="nomeMov" placeholder="Ex: Freela, Supermercado, Pix...">
+                <input type="number" id="valMov" placeholder="Valor (R$)" step="0.01">
+            </div>
+            <div class="linha-inputs">
+                <select id="tipoMov" onchange="ajustarCategorias()">
+                    <option value="saida" selected> Sairá do caixa (Gasto/Despesa)</option>
+                    <option value="entrada"> Entrará no caixa (Renda/Ganho)</option>
+                </select>
+                <select id="catMov">
+                    </select>
+            </div>
+            <button class="btn-azul" onclick="adicionarMovimentacao()">Adicionar Movimentação</button>
+        </div>
+
+        <div class="secao">
+            <h3>Atividades deste Mês</h3>
+            <ul id="listaGastos"></ul>
+            <button class="btn-salvar" onclick="fecharMes()">💾 Fechar e Salvar Mês</button>
+        </div>
+
+        <div class="secao">
+            <h3>Histórico de Meses Passados</h3>
+            <div id="boxHistorico">
+                <p style="text-align: center; color: var(--cinza); font-size: 13px; margin: 0;">Nenhum mês fechado ainda.</p>
+            </div>
+            <button class="btn-limpar" onclick="limparHistoricoTudo()">Apagar Todo o Histórico Salvo</button>
+        </div>
+    </div>
+
+    <script>
+        // Armazenamento
+        let rendaBase = parseFloat(localStorage.getItem('fin_renda')) || 0;
+        let movimentacoes = JSON.parse(localStorage.getItem('fin_gastos')) || [];
+        let historico = JSON.parse(localStorage.getItem('fin_historico')) || [];
+
+        window.onload = function() {
+            if (localStorage.getItem('fin_tema') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.getElementById('iconeTema').innerText = '☀️';
+            }
+            ajustarCategorias();
+            atualizarTela();
+        }
+
+        function alternarTema() {
+            if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                document.getElementById('iconeTema').innerText = '🌙';
+                localStorage.setItem('fin_tema', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.getElementById('iconeTema').innerText = '☀️';
+                localStorage.setItem('fin_tema', 'dark');
+            }
+        }
+
+        // Muda as categorias com base no tipo selecionado (Entrada ou Saída)
+        function ajustarCategorias() {
+            const tipo = document.getElementById('tipoMov').value;
+            const catSelect = document.getElementById('catMov');
+            catSelect.innerHTML = '';
+
+            if (tipo === 'entrada') {
+                catSelect.innerHTML = `
+                    <option value="Renda Extra">💰 Renda Extra / Freela</option>
+                    <option value="Investimentos">📈 Rendimentos</option>
+                    <option value="Outros Ganhos">⚙️ Outros Ganhos</option>
+                `;
+            } else {
+                catSelect.innerHTML = `
+                    <option value="Alimentação">🛒 Alimentação</option>
+                    <option value="Transporte">🚗 Transporte</option>
+                    <option value="Moradia">🏠 Moradia</option>
+                    <option value="Lazer">🍿 Lazer</option>
+                    <option value="Saúde">💊 Saúde</option>
+                    <option value="Outros">⚙️ Outros</option>
+                `;
+            }
+        }
+
+        function definirRenda() {
+            const input = document.getElementById('valRenda');
+            const v = parseFloat(input.value);
+            if (isNaN(v) || v < 0) return alert('Valor inválido!');
+            rendaBase = v;
+            localStorage.setItem('fin_renda', rendaBase);
+            input.value = '';
+            atualizarTela();
+        }
+
+        function adicionarMovimentacao() {
+            const nome = document.getElementById('nomeMov').value.trim();
+            const valor = parseFloat(document.getElementById('valMov').value);
+            const tipo = document.getElementById('tipoMov').value;
+            const cat = document.getElementById('catMov').value;
+
+            if (!nome || isNaN(valor) || valor <= 0) return alert('Preencha os campos de nome e valor corretamente!');
+
+            movimentacoes.push({ id: Date.now(), nome, valor, tipo, cat });
+            localStorage.setItem('fin_gastos', JSON.stringify(movimentacoes));
+
+            document.getElementById('nomeMov').value = '';
+            document.getElementById('valMov').value = '';
+            atualizarTela();
+        }
+
+        function excluirMovimentacao(id) {
+            movimentacoes = movimentacoes.filter(m => m.id !== id);
+            localStorage.setItem('fin_gastos', JSON.stringify(movimentacoes));
+            atualizarTela();
+        }
+
+        function fecharMes() {
+            if (movimentacoes.length === 0 && rendaBase === 0) return alert('Não há dados para salvar!');
+            const nomeMes = prompt('Nome do mês (Ex: Julho/2026):');
+            if (!nomeMes) return;
+
+            const totalEntradas = rendaBase + movimentacoes.filter(m => m.tipo === 'entrada').reduce((s, i) => s + i.valor, 0);
+            const totalSaidas = movimentacoes.filter(m => m.tipo === 'saida').reduce((s, i) => s + i.valor, 0);
+
+            historico.push({
+                nome: nomeMes,
+                renda: totalEntradas,
+                gasto: totalSaidas,
+                saldo: totalEntradas - totalSaidas,
+                itens: movimentacoes
+            });
+
+            localStorage.setItem('fin_historico', JSON.stringify(historico));
+            
+            rendaBase = 0;
+            movimentacoes = [];
+            localStorage.removeItem('fin_renda');
+            localStorage.removeItem('fin_gastos');
+            atualizarTela();
+        }
+
+        function limparHistoricoTudo() {
+            if (confirm('Apagar todo o histórico definitivamente?')) {
+                historico = [];
+                localStorage.removeItem('fin_historico');
+                atualizarTela();
+            }
+        }
+
+        function atualizarTela() {
+            // Soma as entradas extras à renda base
+            const entradasExtras = movimentacoes.filter(m => m.tipo === 'entrada').reduce((s, i) => s + i.valor, 0);
+            const totalRenda = rendaBase + entradasExtras;
+
+            // Soma os gastos
+            const totalGasto = movimentacoes.filter(m => m.tipo === 'saida').reduce((s, i) => s + i.valor, 0);
+            const saldo = totalRenda - totalGasto;
+
+            document.getElementById('txtRenda').innerText = totalRenda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('txtGasto').innerText = totalGasto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('txtSaldo').innerText = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            document.getElementById('cardSaldo').style.backgroundColor = saldo < 0 ? '#c0392b' : '#34495e';
+
+            // Lista Atual
+            const lista = document.getElementById('listaGastos');
+            lista.innerHTML = '';
+            movimentacoes.forEach(m => {
+                const li = document.createElement('li');
+                const sinal = m.tipo === 'entrada' ? '+' : '-';
+                const classeCor = m.tipo === 'entrada' ? 'txt-entrada' : 'txt-saida';
+
+                li.innerHTML = `
+                    <div class="info-gasto">
+                        <strong>${m.nome}</strong>
+                        <span class="cat-gasto">${m.cat}</span>
+                    </div>
+                    <div>
+                        <span class="${classeCor}">${sinal} ${m.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                        <button class="remover" onclick="excluirMovimentacao(${m.id})">❌</button>
+                    </div>
+                `;
+                lista.appendChild(li);
+            });
+
+            // Histórico Permanente
+            const box = document.getElementById('boxHistorico');
+            box.innerHTML = '';
+            if (historico.length === 0) {
+                box.innerHTML = '<p style="text-align: center; color: var(--cinza); font-size: 13px; margin: 0;">Nenhum mês fechado ainda.</p>';
+            } else {
+                historico.forEach(m => {
+                    let itensTxt = '';
+                    m.itens.forEach(i => {
+                        const sinal = i.tipo === 'entrada' ? '+' : '-';
+                        const cor = i.tipo === 'entrada' ? '#2ecc71' : '#e74c3c';
+                        itensTxt += `<div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; border-bottom:1px dashed var(--borda);">
+                            <span>${i.nome} (${i.cat})</span>
+                            <span style="color: ${cor}; font-weight: bold;">${sinal} ${i.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                        </div>`;
+                    });
+
+                    box.innerHTML += `
+                        <details>
+                            <summary>📅 ${m.nome} | Saldo: ${m.saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</summary>
+                            <div style="padding-top: 8px; font-size:12px; color: var(--cinza);">
+                                <strong>Total Renda:</strong> ${m.renda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} | 
+                                <strong>Total Gasto:</strong> ${m.gasto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </div>
+                            <div style="margin-top:8px;">${itensTxt}</div>
+                        </details>
+                    `;
+                });
+            }
+        }
+    </script>
+</body>
+</html>
